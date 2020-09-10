@@ -132,6 +132,5 @@ class Custom:
         else:
             reply = None
         return True
-
         # 返回布尔值：是否阻止后续插件（返回None视作False）
         # return False
