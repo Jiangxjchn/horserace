@@ -34,10 +34,14 @@ class Custom:
              '纺希': '[CQ:emoji,id=9986]', '栞': '[CQ:emoji,id=128567]', '美美': '[CQ:emoji,id=128048]',
              '可可萝': '[CQ:emoji,id=128052]', '香织': '[CQ:emoji,id=128054]', '真琴': '[CQ:emoji,id=128058]',
              '优衣': '[CQ:emoji,id=127800]', '伊莉亚': '[CQ:emoji,id=128137]'}
+    speed = {'霞': 1, '佩可': 1, '吉塔': 1,
+             '凯留': 1, '初音': 1, '镜华': 1,
+             '纺希': 1, '栞': 1, '美美': 1,
+             '可可萝': 1, '香织': 1, '真琴': 1,
+             '优衣': 1, '伊莉亚': 1}
     num = 15
-    dis = [25, 25, 25, 25, 25]
+    dis = [15, 15, 15, 15, 15]
     running = False
-    com = {}
     executor = ThreadPoolExecutor(max_workers=3)
 
     def __init__(self,
@@ -77,33 +81,57 @@ class Custom:
         # async def check_bot():
         #     return 'yes, bot is running'
 
-    def showhorse(self):
+    async def showhorse(self, group_id):
         s = ""
+        com = {}
         horse_cp = {'霞': '[CQ:emoji,id=128269]', '佩可': '[CQ:emoji,id=127833]', '吉塔': '[CQ:emoji,id=127928]',
                     '凯留': '[CQ:emoji,id=128049]', '初音': '[CQ:emoji,id=11088]', '镜华': '[CQ:emoji,id=10000056]',
                     '纺希': '[CQ:emoji,id=9986]', '栞': '[CQ:emoji,id=128567]', '美美': '[CQ:emoji,id=128048]',
                     '可可萝': '[CQ:emoji,id=128052]', '香织': '[CQ:emoji,id=128054]', '真琴': '[CQ:emoji,id=128058]',
                     '优衣': '[CQ:emoji,id=127800]', '伊莉亚': '[CQ:emoji,id=128137]'}
-        self.com.clear()
         for i in range(0, 5):
             a = random.sample(horse_cp.keys(), 1)  # 随机一个字典中的key，第二个参数为限制个数
             b = a[0]
             del horse_cp[b]
-            self.com[b] = self.horse[b]
+            com[b] = self.horse[b]
             s += str(i + 1) + '号:' + b + ',' + '图标为' + self.horse[b]
             if i < 4:
                 s += '\n'
-        return s
+        await self.api.send_group_msg(group_id=group_id, message=s)
+        return com
 
     def run(self):
         return
 
     async def competition(self, group_id):
         await self.api.send_group_msg(group_id=group_id, message='兰德索尔赛跑即将开始！下面为您介绍参赛选手：')
-        await self.api.send_group_msg(group_id=group_id, message=self.showhorse())
-        # while self.running is True:
-        #
-        #     return
+        com = await self.showhorse(group_id)
+        dis = [15, 15, 15, 15, 15]
+        # await asyncio.sleep(30)
+        i = 1
+        while self.running is False:
+            s = ''
+            s += '第' + str(i) + '轮\n'
+            i += 1
+            x = 0
+            for key in com:
+                if i == 1:
+                    s += dis[x] * '=' + self.horse[key] + (15 - dis[x]) * '='
+                    if x < 4:
+                        s += '\n'
+                    x += 1
+                else:
+                    dis[x] -= self.speed[key]
+                    s += dis[x] * '=' + self.horse[key] + (15 - dis[x]) * '='
+                    if x < 4:
+                        s += '\n'
+                    x += 1
+            x = 0
+            await self.api.send_group_msg(group_id=group_id, message=s)
+            if 0 in dis:
+                await self.api.send_group_msg(group_id=group_id, message='win')
+                return True
+            await asyncio.sleep(5)
 
     async def execute_async(self, ctx: Dict[str, Any]) -> Union[None, bool, str]:
         """
@@ -125,8 +153,9 @@ class Custom:
         elif cmd == '赛跑开始' and 'group_id' in ctx and self.running is False:
             # t1 = threading.Thread(target=self.competition, args=(ctx['group_id'],))
             # t1.start()
-            future = self.executor.submit( self.competition, ctx['group_id'])
-            reply = None
+            # future = self.executor.submit(self.competition, ctx['group_id'])
+            reply = await self.competition(ctx['group_id'])
+
         elif self.running is True:
             return "赛跑中"
         else:
